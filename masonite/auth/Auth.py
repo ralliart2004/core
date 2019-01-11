@@ -75,12 +75,12 @@ class Auth:
             else:
                 model = self.auth_model.where(auth_column, name).first()
 
-            try:
-                password_column = self._get_password_column(model)
-            except AttributeError as e:
-                raise AttributeError('Your model does not have a password column or a designated __password__ attribute. Set the __password__ attribute to the name of your password column.') from e
+            # try:
+            #     password_column = self._get_password_value(model)
+            # except AttributeError as e:
+            #     raise AttributeError('Your model does not have a password column or a designated __password__ attribute. Set the __password__ attribute to the name of your password column.') from e
 
-            if model and bcrypt.checkpw(bytes(password, 'utf-8'), bytes(password_column, 'utf-8')):
+            if model and bcrypt.checkpw(bytes(password, 'utf-8'), bytes(model.password, 'utf-8')):
                 if not self._once:
                     remember_token = str(uuid.uuid4())
                     model.remember_token = remember_token
@@ -132,5 +132,8 @@ class Auth:
         self._once = True
         return self
 
-    def _get_password_column(self, model):
+    def _get_password_value(self, model):
         return getattr(model, model.__password__) if hasattr(model, '__password__') else model.password
+
+    def _get_password_column(self, model):
+        return 'password' if not hasattr(model, '__password__') else model.__password__
