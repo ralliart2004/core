@@ -62,10 +62,6 @@ class Auth:
             object|bool -- Returns the current authenticated user object or False or None if there is none.
         """
         auth_column = self.auth_model.__auth__
-        try:
-            password_column = self._get_password_column()
-        except AttributeError as e:
-            raise AttributeError('Your model does not have a password column or a designated __password__ attribute. Set the __password__ attribute to the name of your password column.') from e
 
         try:
             # Try to login multiple or statements if given an auth list
@@ -78,6 +74,11 @@ class Auth:
                 model = model.first()
             else:
                 model = self.auth_model.where(auth_column, name).first()
+            
+            try:
+                password_column = self._get_password_column(model)
+            except AttributeError as e:
+                raise AttributeError('Your model does not have a password column or a designated __password__ attribute. Set the __password__ attribute to the name of your password column.') from e
 
             if model and bcrypt.checkpw(bytes(password, 'utf-8'), bytes(password_column, 'utf-8')):
                 if not self._once:
@@ -131,5 +132,5 @@ class Auth:
         self._once = True
         return self
 
-    def _get_password_column(self):
-        return getattr(self.auth_model, self.auth_model.__password__) if hasattr(self.auth_model, '__password__') else self.auth_model.password
+    def _get_password_column(self, model):
+        return getattr(model, model.__password__) if hasattr(model, '__password__') else model.password
