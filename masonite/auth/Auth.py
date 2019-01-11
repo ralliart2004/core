@@ -74,7 +74,7 @@ class Auth:
                 model = model.first()
             else:
                 model = self.auth_model.where(auth_column, name).first()
-            
+
             try:
                 password_column = self._get_password_column(model)
             except AttributeError as e:
