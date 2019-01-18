@@ -3,6 +3,7 @@
 import uuid
 
 import bcrypt
+from masonite import env
 
 
 class Auth:
@@ -38,9 +39,12 @@ class Auth:
         """
         try:
             if self.request.get_cookie('token'):
-                return self.auth_model.where(
-                    'remember_token', self.request.get_cookie('token')
-                ).first()
+                if not bool(env("COOKIE_ONLY_AUTHENTICATION", "False")):
+                    return self.auth_model.where(
+                        'remember_token', self.request.get_cookie('token')
+                    ).first()
+
+                return self.request.get_cookie('token')
 
             return False
         except Exception as exception:
@@ -85,7 +89,7 @@ class Auth:
                     remember_token = str(uuid.uuid4())
                     model.remember_token = remember_token
                     model.save()
-                    self.request.cookie('token', remember_token)
+                    self.request.cookie('token', remember_token, expires=env("COOKIE_EXPIRE_TIME", ""))
                 return model
 
         except Exception as exception:
@@ -118,7 +122,7 @@ class Auth:
                 remember_token = str(uuid.uuid4())
                 model.remember_token = remember_token
                 model.save()
-                self.request.cookie('token', remember_token)
+                self.request.cookie('token', remember_token, expires=env("COOKIE_EXPIRE_TIME", ""))
             return model
 
         return False
